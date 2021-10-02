@@ -1,12 +1,12 @@
 <div class="row gray-darker">
     <div class="col-xs-12">
-            &nbsp;
+        <h2>{{ contact.name }}</h2>
     </div>
 
     <div class="col-xs-12" style="padding-bottom: 2em;">
         <div class="pull-left">
             &nbsp;
-            <img src="" alt="">
+            <img src="{{ contact.imageUrl }}" alt="{{ contact.name }}">
         </div>
 
         <div class="pull-right">
@@ -15,12 +15,12 @@
         </div>    
     </div>
 </div>
-<div class="row">
+<div class="row" style="padding:2em;">
     <div class="col-xs-12">
-        Email:
+       <b>Email:</b> {{ contact.email }}
     </div>
     <div class="col-xs-12">
-        Phone:
+        <b>Phone:</b> {{ contact.phone }}
     </div>
 
 </div>

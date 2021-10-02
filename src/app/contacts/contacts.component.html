@@ -1,10 +1,13 @@
 <div class="row modifiedblock">
     <div class="col-md-5" style="border: 1px solid #e3e3e3; padding-bottom: 1em;">
-       <cms-contact-list></cms-contact-list>
+       <cms-contact-list (contactWasSelected)="selectedContact =$event"></cms-contact-list>
     </div>
 
 
     <div class="col-md-4" style="border: 1px solid #e3e3e3;">
-        <cms-contact-detail></cms-contact-detail>
+        <cms-contact-detail *ngIf="selectedContact; else infotext" [contact]="selectedContact"></cms-contact-detail>
+        <ng-template #infotext>
+            <p>Please select a Contact</p>
+        </ng-template>
     </div>
 </div>
