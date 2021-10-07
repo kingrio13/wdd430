@@ -1,4 +1,4 @@
-import { prepareEventListenerParameters } from '@angular/compiler/src/render3/view/template';
+
 import { Component, OnInit, ViewChild, ElementRef, Output, EventEmitter } from '@angular/core';
 import { Message } from '../message.model';
 
