@@ -10,7 +10,7 @@ import { Message } from '../message.model';
   styleUrls: ['./message-edit.component.css']
 })
 export class MessageEditComponent implements OnInit {
-  currentSender = 'Rio Michael';
+  currentSender = '18';
   @ViewChild('subject', { static: true }) subject: ElementRef;
   @ViewChild('msgText', { static: true }) msgText: ElementRef;
   @Output() addMessageEvent = new EventEmitter<Message>();
