@@ -13,9 +13,18 @@ export class ContactService {
     this.contacts = MOCKCONTACTS;
   }
 
+ 
+
   getContacts(): Contact[] {
     return this.contacts.slice();
   }
+
+
+
+  getContactindex(index:number){
+    return this.contacts[index];
+}
+
 
   getContact(id: string): Contact | null{
     for (const contact of this.contacts) {
@@ -25,4 +34,10 @@ export class ContactService {
     }
     return null;
   }
+
+
+
+
+
+
 }
