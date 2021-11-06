@@ -75,17 +75,18 @@ export class ContactService {
  updateContact(originalContact: Contact, newContact: Contact) {
  
     if(!originalContact || !newContact ){
-       let pos = this.contacts.indexOf(originalContact)
-       if (pos < 0){
-          return;
-       }
- 
-       newContact.id = originalContact.id;
-       this.contacts[pos] = newContact;
-       let ContactsListClone = this.contacts.slice();
-       this.contactChangedEvent.next(ContactsListClone)
- 
+      return;
     }
+
+    let pos = this.contacts.indexOf(originalContact)
+    if (pos < 0){
+       return;
+    }
+
+    newContact.id = originalContact.id;
+    this.contacts[pos] = newContact;
+    let ContactsListClone = this.contacts.slice();
+    this.contactChangedEvent.next(ContactsListClone)
   }
 
 
