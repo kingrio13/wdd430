@@ -13,6 +13,8 @@ export class DocumentListComponent implements OnInit, OnDestroy {
   @Output() selectedDocumentEvent: EventEmitter<Document> = new EventEmitter<Document>();
 
   private documentsList: Subscription;
+  private documentInit: Subscription;
+  isFetching = false;
 
 
   documents: Document[] = [];
@@ -20,13 +22,22 @@ export class DocumentListComponent implements OnInit, OnDestroy {
   constructor(private documentService: DocumentService) { }
 
   ngOnInit(): void {
-    this.documents = this.documentService.getDocuments();
+    //this.documents = this.documentService.getDocuments();
+
+    this.isFetching=true;
+    this.documentInit = this.documentService.getDocuments().subscribe(docs =>{
+      this.isFetching=false;
+      this.documents = docs;
+      //console.log(docs);
+   });
+
 
     this.documentsList = this.documentService.documentListChangedEvent
       .subscribe((documents: Document[]) => {
         this.documents = documents;
       });
-    
+
+ 
 
   }
 

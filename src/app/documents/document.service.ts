@@ -1,8 +1,13 @@
-
+import { Injectable } from "@angular/core";
+import { catchError, map  } from 'rxjs/operators';
 import { Document } from './document.model';
-import {MOCKDOCUMENTS} from './MOCKDOCUMENTS';
-import { Subject } from 'rxjs';
+//import {MOCKDOCUMENTS} from './MOCKDOCUMENTS';
+import { Subject, throwError } from 'rxjs';
 
+import { HttpClient, HttpHeaders} from '@angular/common/http';
+
+
+@Injectable({providedIn:'root'})
 
 export class DocumentService {
 
@@ -13,31 +18,57 @@ export class DocumentService {
   documentListChangedEvent = new Subject <Document[]>();
   startedEditing = new Subject<number>();
   maxDocumentId:number;
-
+  error = new Subject<string>();
 
   
 
-  constructor() { 
-   this.documents=MOCKDOCUMENTS;
+  constructor(private http:HttpClient) { 
+   //this.documents=MOCKDOCUMENTS;
+
+   // this.getDocuments().subscribe(docs=>{
+   //    this.documents = docs;
+   //    //console.log('constructor', docs);
+   // })
+
    this.maxDocumentId = this.getMaxId();
  }
 
 
+ sortDocuments(){
+   this.documents =this.documents.sort((a, b) => {
+      if (a['name'] > b['name']) {
+      return 1;
+      } else {
+      return -1; 
+      }});
+ }
+
+ 
  
 
-  getDocuments(): Document[] {
-    return this.documents.slice();
-  }
+  getDocuments(){
+     // return this.documents.slice();
+   return this.http.get<Document[]>('https://cms430-456bf-default-rtdb.firebaseio.com/documents.json')
+   .pipe(map((responseData)=>{
+         this.documents = responseData;
+         this.maxDocumentId = this.getMaxId();
+        
 
-  
-//   getDocument(id: string): Document | null {
-//     for (const document of this.documents) {
-//     if (document.id === id) {
-//       return document;
-//     }
-//   }
-//   return null;
-// }
+        this.sortDocuments();
+
+         this.documentListChangedEvent.next(this.documents.slice());
+         return this.documents;
+
+     
+    }), catchError(errorRes =>{
+        return throwError(errorRes);
+    })
+    );
+
+
+}
+
+
 
 
 
@@ -58,6 +89,7 @@ export class DocumentService {
       this.documents.splice(pos, 1);
       let documentsListClone = this.documents.slice();
       this.documentListChangedEvent.next(documentsListClone);
+      this.storeDocuments();
    }
 
    
@@ -83,8 +115,12 @@ addDocument(newDocument: Document): void {
 
    // console.log('get last id',newDocument.id);
    this.documents.push(newDocument);
+   this.sortDocuments();
    let documentsListClone = this.documents.slice();
    this.documentListChangedEvent.next(documentsListClone);
+   this.storeDocuments();
+
+
 
 }
 
@@ -101,11 +137,35 @@ updateDocument(originalDocument: Document, newDocument: Document) {
 
       newDocument.id = originalDocument.id;
       this.documents[pos] = newDocument;
+
+
+      //PATCH
+      
       let documentsListClone = this.documents.slice();
       this.documentListChangedEvent.next(documentsListClone);
+      this.storeDocuments();
 
 }
 
+
+
+storeDocuments(){
+
+   const docJson = JSON.stringify(this.documents);
+   const httpParam = {
+     headers: new HttpHeaders({
+       'Content-Type': 'application/json',
+     })
+   }
+   this.http.put<Document[]>('https://cms430-456bf-default-rtdb.firebaseio.com/documents.json', docJson, httpParam)
+     .subscribe(() => {
+         this.sortDocuments();
+         this.documentListChangedEvent.next(this.documents.slice())
+   });
+ }
+
+ 
+}
 
     
 
@@ -113,4 +173,4 @@ updateDocument(originalDocument: Document, newDocument: Document) {
 
 
 
-}
+
