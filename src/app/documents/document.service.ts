@@ -23,13 +23,6 @@ export class DocumentService {
   
 
   constructor(private http:HttpClient) { 
-   //this.documents=MOCKDOCUMENTS;
-
-   // this.getDocuments().subscribe(docs=>{
-   //    this.documents = docs;
-   //    //console.log('constructor', docs);
-   // })
-
    this.maxDocumentId = this.getMaxId();
  }
 
@@ -48,15 +41,17 @@ export class DocumentService {
 
   getDocuments(){
      // return this.documents.slice();
-   return this.http.get<Document[]>('https://cms430-456bf-default-rtdb.firebaseio.com/documents.json')
+   //return this.http.get<Document[]>('https://cms430-456bf-default-rtdb.firebaseio.com/documents.json')
+   
+   return this.http.get<{message:string, document:any}>('http://localhost:3000/documents')
    .pipe(map((responseData)=>{
-         this.documents = responseData;
+         this.documents = responseData.document;
          this.maxDocumentId = this.getMaxId();
-        
+         this.sortDocuments();
 
-        this.sortDocuments();
 
          this.documentListChangedEvent.next(this.documents.slice());
+         
          return this.documents;
 
      
@@ -78,20 +73,30 @@ export class DocumentService {
     }
 
 
-   deleteDocument(document: Document) {
-      if (!document) {
-         return;
-      }
-      const pos = this.documents.indexOf(document);
-      if (pos < 0) {
-         return;
-      }
-      this.documents.splice(pos, 1);
-      let documentsListClone = this.documents.slice();
-      this.documentListChangedEvent.next(documentsListClone);
-      this.storeDocuments();
-   }
 
+
+    deleteDocument(document: Document) {
+
+      if (!document) {
+        return;
+      }
+  
+      const pos = this.documents.findIndex(d => d.id === document.id);
+
+      if (pos < 0) {
+        return;
+      }
+  
+      // delete from database
+      this.http.delete('http://localhost:3000/documents/' + document.id)
+        .subscribe(() => {
+          this.sortDocuments();
+            this.documents.splice(pos, 1);
+            this.documentListChangedEvent.next(this.documents.slice());
+           
+          }
+        );
+    }
    
 getMaxId(): number {
 
@@ -106,63 +111,73 @@ getMaxId(): number {
    return maxId
 }
 
-addDocument(newDocument: Document): void {
-   if (!newDocument) {
-      return;
-    }
-   this.maxDocumentId++;
-   newDocument.id = this.maxDocumentId.toString();
-
-   // console.log('get last id',newDocument.id);
-   this.documents.push(newDocument);
-   this.sortDocuments();
-   let documentsListClone = this.documents.slice();
-   this.documentListChangedEvent.next(documentsListClone);
-   this.storeDocuments();
 
 
-
-}
-
-
-updateDocument(originalDocument: Document, newDocument: Document) {
-
-   if(!originalDocument || !newDocument ){
-      return;
+addDocument(document: Document) {
+   if (!document) {
+     return;
    }
-   let pos = this.documents.indexOf(originalDocument);
-   if (pos < 0){
-      return;
-   } 
 
+   // make sure id of the new Document is empty
+   document.id = '';
+
+   const headers = new HttpHeaders({'Content-Type': 'application/json'});
+
+   // add to database
+   this.http.post<{ message: string, document: Document }>('http://localhost:3000/documents',
+     document,
+     { headers: headers })
+     .subscribe(
+       (responseData) => {
+         // add new document to documents
+         this.sortDocuments();
+         this.documents.push(responseData.document);
+         let documentsListClone = this.documents.slice();
+         this.documentListChangedEvent.next(documentsListClone);
+
+        
+       }
+     );
+ }
+
+
+ updateDocument(originalDocument: Document, newDocument: Document) {
+   if (!originalDocument || !newDocument) {
+     return;
+   }
+
+   const pos = this.documents.findIndex(d => d.id === originalDocument.id);
+
+   if (pos < 0) {
+     return;
+   }
+
+   // set the id of the new Document to the id of the old Document
       newDocument.id = originalDocument.id;
       this.documents[pos] = newDocument;
 
+   const headers = new HttpHeaders({'Content-Type': 'application/json'});
 
-      //PATCH
-      
-      let documentsListClone = this.documents.slice();
-      this.documentListChangedEvent.next(documentsListClone);
-      this.storeDocuments();
-
-}
-
-
-
-storeDocuments(){
-
-   const docJson = JSON.stringify(this.documents);
-   const httpParam = {
-     headers: new HttpHeaders({
-       'Content-Type': 'application/json',
-     })
-   }
-   this.http.put<Document[]>('https://cms430-456bf-default-rtdb.firebaseio.com/documents.json', docJson, httpParam)
+   // update database
+   this.http.put('http://localhost:3000/documents/' + originalDocument.id,
+     newDocument, { headers: headers })
      .subscribe(() => {
-         this.sortDocuments();
-         this.documentListChangedEvent.next(this.documents.slice())
-   });
+         
+
+        this.sortDocuments();
+         let documentsListClone = this.documents.slice();
+         this.documentListChangedEvent.next(documentsListClone);
+         
+        
+       }
+     );
  }
+
+
+ storesend(){
+  this.documentListChangedEvent.next(this.documents.slice())
+ }
+
 
  
 }

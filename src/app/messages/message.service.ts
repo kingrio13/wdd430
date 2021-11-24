@@ -3,15 +3,19 @@ import { HttpClient, HttpHeaders} from '@angular/common/http';
 import { Subject, throwError } from 'rxjs';
 import { Message } from './message.model';
 import { catchError, map  } from 'rxjs/operators';
-import { MOCKMESSAGES } from './MOCKMESSAGES';
+import { Contact } from '../contacts/contact.model';
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class MessageService {
-  @Output() messageChangedEvent: EventEmitter<Message[]> = new EventEmitter<Message[]>();
+  //@Output() messageChangedEvent: EventEmitter<Message[]> = new EventEmitter<Message[]>();
+
+  messageChangedEvent =  new Subject<Message[]>();
 
   messages: Message[] = [];
+  messageName:[];
   maxMessageId:number;
 
   constructor(private http:HttpClient) {
@@ -33,16 +37,15 @@ export class MessageService {
 
 
   getMessages(){
-    // return this.messages.slice();
-
-    return this.http.get<Message[]>('https://cms430-456bf-default-rtdb.firebaseio.com/messages.json')
+    return this.http.get<{message:string, messageList:any}>('http://localhost:3000/messages')
     .pipe(map((responseData)=>{
-          this.messages = responseData;
+          this.messages = responseData.messageList;
           this.maxMessageId = this.getMaxId();
- 
+        
           this.messageChangedEvent.next(this.messages.slice());
           return this.messages;
-
+ 
+      
      }), catchError(errorRes =>{
          return throwError(errorRes);
      })
@@ -60,25 +63,38 @@ export class MessageService {
     return null;
   }
 
-  addMessage(message: Message): void {
-    this.messages.push(message);
-    this.messageChangedEvent.emit(this.messages.slice());
-    this.storeMessage();
-  }
 
+ 
 
-
-  storeMessage(){
-    const docJson = JSON.stringify(this.messages);
-    const httpParam = {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json',
-      })
+  addMessage(message: Message) {
+  
+  
+   
+    if (!message) {
+      return;
     }
-    this.http.put<Document[]>('https://cms430-456bf-default-rtdb.firebaseio.com/messages.json', docJson, httpParam)
-      .subscribe(() => {
-          this.messageChangedEvent.next(this.messages.slice())
-    });
+
+    //console.log('adding message');
+
+    const headers = new HttpHeaders({'Content-Type': 'application/json'});
+ 
+    // add to database
+    this.http.post<{ messagelist: Message }>('http://localhost:3000/messages',
+      message,
+      { headers: headers })
+      .subscribe(
+        (responseData) => {
+        
+          this.messages.push(message);
+
+          let messageListClone = this.messages.slice();
+          this.messageChangedEvent.next(messageListClone);
+        }
+      );
   }
+
 
 }
+
+
+

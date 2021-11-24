@@ -42,11 +42,15 @@
 <div class="row">
     <div class="col-xs-12">
      
-     
+ 
       <cms-contact-item *ngFor="let contactel of contacts | contactsFilter:term;  let i=index;"
       [contact]="contactel" [index]="i" dnd-draggable [dragEnabled]="true"
       [dragData]="contactel" [dropZones]="['contactGroup']">
+
+     
       </cms-contact-item>
+
+
    
     </div>
 </div>

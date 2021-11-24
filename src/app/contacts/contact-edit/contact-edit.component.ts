@@ -34,10 +34,14 @@ export class ContactEditComponent implements OnInit, OnDestroy {
 
       this.subscription = this.route.params.subscribe((params: Params) => {
         this.id = params.id;
+
+
         if (!this.id) {
           this.editMode = false;
           return;
         }
+
+        
         this.originalContact = this.contactService.getContactindex(this.id);
         if (!this.originalContact) {
           return;
@@ -65,7 +69,7 @@ export class ContactEditComponent implements OnInit, OnDestroy {
       const newContact = new Contact(newid, value.name, value.email, value.phone, value.imageUrl,this.groupContacts);
     
       this.contactService.updateContact(this.originalContact, newContact)
-      console.log('updated');
+      //console.log('updated');
     }
     else{
       this.contactService.addContact(form.value)
